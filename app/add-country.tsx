@@ -1,19 +1,58 @@
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { v4 as uuidv4 } from "uuid";
+import { addCountry } from "./services/storage";
+import { Country } from "./types/country";
 
 export default function AddCountryScreen() {
+  const router = useRouter();
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+
+  const handleSave = async () => {
+    if (!code.trim() || !name.trim()) {
+      Alert.alert("Błąd", "Podaj kod i nazwę kraju.");
+      return;
+    }
+    const newCountry: Country = {
+      id: uuidv4(),
+      code: code.trim().toUpperCase(),
+      name: name.trim(),
+      notes: "",
+    };
+    try {
+      await addCountry(newCountry);
+      router.back();
+    } catch (e) {
+      Alert.alert("Błąd", "Nie udało się zapisać kraju.");
+      console.error(e);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Dodaj nowy kraj</Text>
-      <TextInput style={styles.input} placeholder="Kod ISO kraju" />
-      <TextInput style={styles.input} placeholder="Nazwa kraju" />
-      <TouchableOpacity style={styles.button} onPress={() => {}}>
+      <TextInput
+        style={styles.input}
+        placeholder="Kod ISO kraju (np. POL)"
+        value={code}
+        onChangeText={setCode}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Nazwa kraju"
+        value={name}
+        onChangeText={setName}
+      />
+      <TouchableOpacity style={styles.button} onPress={handleSave}>
         <Text style={styles.buttonText}>Zapisz kraj</Text>
       </TouchableOpacity>
     </View>
