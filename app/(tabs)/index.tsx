@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -88,6 +89,11 @@ export default function HomeScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
+      <View style={styles.logoContainer}>
+        <MaterialCommunityIcons name="movie-roll" size={48} color="tomato" />
+        <Text style={styles.appName}>Movie Explorer</Text>
+      </View>
+
       <Text style={styles.header}>Na czasie</Text>
       <FlatList
         horizontal
@@ -117,6 +123,17 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 4,
     fontSize: 14,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  appName: {
+    marginLeft: 12,
+    fontSize: 24,
+    fontWeight: "bold",
   },
   noImage: {
     justifyContent: "center",

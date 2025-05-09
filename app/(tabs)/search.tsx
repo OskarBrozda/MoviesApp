@@ -84,7 +84,7 @@ export default function SearchScreen() {
     return () => {
       debouncedSearch.cancel();
     };
-  }, [query]);
+  }, [debouncedSearch, query]);
 
   const renderMovie = ({ item }: { item: MovieItem }) => (
     <TouchableOpacity
@@ -148,6 +148,7 @@ export default function SearchScreen() {
     <View style={styles.container}>
       <TextInput
         placeholder="Szukaj filmów lub aktorów..."
+        placeholderTextColor="grey"
         style={styles.input}
         value={query}
         onChangeText={setQuery}
