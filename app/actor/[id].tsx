@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -12,6 +13,7 @@ import {
   View,
 } from "react-native";
 import tmdbApi from "../../api/tmdbApi";
+import { FavoritesContext } from "../context/FavoritesContext";
 
 interface MovieCredit {
   id: number;
@@ -40,6 +42,9 @@ export default function PersonDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const screenWidth = Dimensions.get("window").width;
+  const { addFavorite, removeFavorite, isFavorite } =
+    useContext(FavoritesContext);
+  const fav = person ? isFavorite(person.id, "person") : false;
 
   useEffect(() => {
     (async () => {
@@ -123,6 +128,25 @@ export default function PersonDetailsScreen() {
           style={styles.profileImage}
         />
       )}
+      <TouchableOpacity
+        onPress={() =>
+          fav
+            ? removeFavorite(person.id, "person")
+            : addFavorite({
+                id: person.id,
+                type: "person",
+                name: person.name,
+                profile_path: person.profile_path || undefined,
+              })
+        }
+        style={{ position: "absolute", top: 16, right: 16 }}
+      >
+        <Ionicons
+          name={fav ? "heart" : "heart-outline"}
+          size={24}
+          color="tomato"
+        />
+      </TouchableOpacity>
       <Text style={styles.name}>{person.name}</Text>
       {person.birthday && (
         <Text style={styles.meta}>

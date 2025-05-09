@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -13,6 +14,7 @@ import {
   View,
 } from "react-native";
 import tmdbApi from "../../api/tmdbApi";
+import { FavoritesContext } from "../context/FavoritesContext";
 
 interface CastMember {
   id: number;
@@ -55,6 +57,9 @@ export default function MovieDetailsScreen() {
   const screenWidth = Dimensions.get("window").width;
   const posterWidth = screenWidth * 0.7;
   const router = useRouter();
+  const { addFavorite, removeFavorite, isFavorite } =
+    useContext(FavoritesContext);
+  const fav = movie ? isFavorite(movie.id, "movie") : false;
 
   useEffect(() => {
     (async () => {
@@ -80,6 +85,7 @@ export default function MovieDetailsScreen() {
       </View>
     );
   }
+
   if (!movie) {
     return (
       <View style={styles.center}>
@@ -151,6 +157,29 @@ export default function MovieDetailsScreen() {
           }}
         />
       )}
+      <TouchableOpacity
+        onPress={() =>
+          fav
+            ? removeFavorite(movie.id, "movie")
+            : addFavorite({
+                id: movie.id,
+                type: "movie",
+                title: movie.title,
+                poster_path: movie.poster_path || undefined,
+              })
+        }
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+        }}
+      >
+        <Ionicons
+          name={fav ? "heart" : "heart-outline"}
+          size={28}
+          color="tomato"
+        />
+      </TouchableOpacity>
       <Text style={styles.title}>{movie.title}</Text>
       <Text style={styles.subtitle}>
         {movie.release_date.slice(0, 4)} • Ocena:{" "}
