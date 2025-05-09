@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import tmdbApi from "../../api/tmdbApi";
@@ -53,6 +54,7 @@ export default function MovieDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const screenWidth = Dimensions.get("window").width;
   const posterWidth = screenWidth * 0.7;
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -91,7 +93,10 @@ export default function MovieDetailsScreen() {
   );
 
   const renderPerson = ({ item }: { item: CastMember }) => (
-    <View style={styles.person}>
+    <TouchableOpacity
+      style={styles.person}
+      onPress={() => router.push(`/actor/${item.id}`)}
+    >
       {item.profile_path ? (
         <Image
           source={{
@@ -110,7 +115,7 @@ export default function MovieDetailsScreen() {
       <Text style={styles.personChar} numberOfLines={1}>
         {item.character}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderMovie = ({ item }: { item: MovieSummary }) => (
@@ -156,7 +161,6 @@ export default function MovieDetailsScreen() {
       {trailer && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Zwiastun</Text>
-          {/* Możesz tu osadzić WebView z YouTube lub otworzyć w przeglądarce */}
           <Text
             style={styles.link}
             onPress={() =>

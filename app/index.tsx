@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -5,6 +6,7 @@ import {
   Image,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import tmdbApi from "../api/tmdbApi";
@@ -19,6 +21,7 @@ export default function HomeScreen() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const windowWidth = Dimensions.get("window").width;
   const posterWidth = windowWidth * 0.4;
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -42,7 +45,10 @@ export default function HomeScreen() {
         data={movies}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <View style={{ marginRight: 12 }}>
+          <TouchableOpacity
+            style={{ marginRight: 12 }}
+            onPress={() => router.push(`/movie/${item.id}`)}
+          >
             {item.poster_path ? (
               <Image
                 source={{
@@ -67,7 +73,7 @@ export default function HomeScreen() {
             <Text style={styles.title} numberOfLines={1}>
               {item.title}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
         showsHorizontalScrollIndicator={false}
       />
