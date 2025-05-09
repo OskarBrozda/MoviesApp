@@ -142,6 +142,16 @@ export default function MovieDetailsScreen() {
     </View>
   );
 
+  const uniqueCast = movie.credits.cast.filter(
+    (c, i, arr) => arr.findIndex((x) => x.id === c.id) === i
+  );
+  const uniqueSimilar = movie.similar.results.filter(
+    (m, i, arr) => arr.findIndex((x) => x.id === m.id) === i
+  );
+  const uniqueRecommendations = movie.recommendations.results.filter(
+    (m, i, arr) => arr.findIndex((x) => x.id === m.id) === i
+  );
+
   return (
     <ScrollView style={styles.container}>
       {movie.poster_path && (
@@ -205,7 +215,7 @@ export default function MovieDetailsScreen() {
         <Text style={styles.sectionTitle}>Obsada</Text>
         <FlatList
           horizontal
-          data={movie.credits.cast}
+          data={uniqueCast}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderPerson}
           showsHorizontalScrollIndicator={false}
@@ -217,7 +227,7 @@ export default function MovieDetailsScreen() {
           <Text style={styles.sectionTitle}>Podobne filmy</Text>
           <FlatList
             horizontal
-            data={movie.similar.results}
+            data={uniqueSimilar}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderMovie}
             showsHorizontalScrollIndicator={false}
@@ -230,7 +240,7 @@ export default function MovieDetailsScreen() {
           <Text style={styles.sectionTitle}>Rekomendacje</Text>
           <FlatList
             horizontal
-            data={movie.recommendations.results}
+            data={uniqueRecommendations}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderMovie}
             showsHorizontalScrollIndicator={false}
