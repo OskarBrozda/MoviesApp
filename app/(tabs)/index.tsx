@@ -1,9 +1,11 @@
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
   Image,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,74 +20,101 @@ interface Movie {
 }
 
 export default function HomeScreen() {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const router = useRouter();
   const windowWidth = Dimensions.get("window").width;
   const posterWidth = windowWidth * 0.4;
-  const router = useRouter();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await tmdbApi.get<{ results: Movie[] }>(
-          "/trending/movie/day"
-        );
-        setMovies(res.data.results);
-        console.log("Trending:", res.data.results);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+  const [trending, setTrending] = useState<Movie[]>([]);
+  const [upcoming, setUpcoming] = useState<Movie[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchAll = useCallback(async () => {
+    try {
+      const [trRes, upRes] = await Promise.all([
+        tmdbApi.get<{ results: Movie[] }>("/trending/movie/day"),
+        tmdbApi.get<{ results: Movie[] }>("/movie/upcoming"),
+      ]);
+      setTrending(trRes.data.results);
+      setUpcoming(upRes.data.results.slice(0, 10));
+    } catch (e) {
+      console.error("Fetch error:", e);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAll().finally(() => setRefreshing(false));
+  };
+
+  const renderMoviePoster = (item: Movie) => (
+    <TouchableOpacity
+      key={item.id}
+      style={{ marginRight: 12 }}
+      onPress={() => router.push(`/movie/${item.id}`)}
+    >
+      {item.poster_path ? (
+        <Image
+          source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+          style={{
+            width: posterWidth,
+            height: posterWidth * 1.5,
+            borderRadius: 8,
+          }}
+        />
+      ) : (
+        <View
+          style={[
+            styles.noImage,
+            { width: posterWidth, height: posterWidth * 1.5 },
+          ]}
+        >
+          <Text>No Image</Text>
+        </View>
+      )}
+      <Text style={[styles.title, { width: posterWidth }]} numberOfLines={1}>
+        {item.title}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Trending Today</Text>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <Text style={styles.header}>Na czasie</Text>
       <FlatList
         horizontal
-        data={movies}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={{ marginRight: 12 }}
-            onPress={() => router.push(`/movie/${item.id}`)}
-          >
-            {item.poster_path ? (
-              <Image
-                source={{
-                  uri: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-                }}
-                style={{
-                  width: posterWidth,
-                  height: posterWidth * 1.5,
-                  borderRadius: 8,
-                }}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.noImage,
-                  { width: posterWidth, height: posterWidth * 1.5 },
-                ]}
-              >
-                <Text>No Image</Text>
-              </View>
-            )}
-            <Text style={styles.title} numberOfLines={1}>
-              {item.title}
-            </Text>
-          </TouchableOpacity>
-        )}
+        data={trending}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => renderMoviePoster(item)}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 16 }}
       />
-    </View>
+
+      <Text style={styles.header}>Nadchodzace</Text>
+      <FlatList
+        horizontal
+        data={upcoming}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => renderMoviePoster(item)}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 16 }}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 50, paddingHorizontal: 16 },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 12 },
+  header: { fontSize: 22, fontWeight: "bold", marginVertical: 12 },
   title: {
-    width: Dimensions.get("window").width * 0.4,
     marginTop: 4,
     fontSize: 14,
   },

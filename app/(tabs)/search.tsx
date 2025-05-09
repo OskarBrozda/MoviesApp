@@ -3,6 +3,7 @@ import debounce from "lodash.debounce";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   Image,
   Keyboard,
@@ -13,6 +14,8 @@ import {
   View,
 } from "react-native";
 import tmdbApi from "../../api/tmdbApi";
+
+const posterWidth = Dimensions.get("window").width * 0.2;
 
 interface MovieItem {
   id: number;
@@ -32,6 +35,22 @@ export default function SearchScreen() {
   const [movies, setMovies] = useState<MovieItem[]>([]);
   const [people, setPeople] = useState<PersonItem[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [suggestions, setSuggestions] = useState<MovieItem[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await tmdbApi.get<{ results: MovieItem[] }>(
+          "/trending/movie/day"
+        );
+        setSuggestions(res.data.results.slice(0, 10));
+      } catch (e) {
+        console.warn("Nie udało się pobrać sugestii:", e);
+      }
+    })();
+  }, []);
+
   const debouncedSearch = useRef(
     debounce(async (q: string) => {
       if (!q.trim()) {
@@ -65,7 +84,7 @@ export default function SearchScreen() {
     return () => {
       debouncedSearch.cancel();
     };
-  }, [debouncedSearch, query]);
+  }, [query]);
 
   const renderMovie = ({ item }: { item: MovieItem }) => (
     <TouchableOpacity
@@ -84,7 +103,6 @@ export default function SearchScreen() {
       <Text style={styles.rowText}>{item.title}</Text>
     </TouchableOpacity>
   );
-
   const renderPerson = ({ item }: { item: PersonItem }) => (
     <TouchableOpacity
       style={styles.row}
@@ -95,11 +113,34 @@ export default function SearchScreen() {
     >
       {item.profile_path && (
         <Image
-          source={{ uri: `https://image.tmdb.org/t/p/w92${item.profile_path}` }}
+          source={{
+            uri: `https://image.tmdb.org/t/p/w92${item.profile_path}`,
+          }}
           style={styles.thumb}
         />
       )}
       <Text style={styles.rowText}>{item.name}</Text>
+    </TouchableOpacity>
+  );
+
+  const renderSuggestion = ({ item }: { item: MovieItem }) => (
+    <TouchableOpacity
+      style={styles.suggItem}
+      onPress={() => router.push(`/movie/${item.id}`)}
+    >
+      {item.poster_path ? (
+        <Image
+          source={{
+            uri: `https://image.tmdb.org/t/p/w185${item.poster_path}`,
+          }}
+          style={styles.suggThumb}
+        />
+      ) : (
+        <View style={[styles.thumb, styles.noImagePlaceholder]} />
+      )}
+      <Text style={styles.suggText} numberOfLines={1}>
+        {item.title}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -116,50 +157,64 @@ export default function SearchScreen() {
 
       {loading && <ActivityIndicator style={{ marginTop: 16 }} />}
 
-      {!loading &&
-        movies.length + people.length === 0 &&
-        query.trim().length > 0 && (
-          <Text style={styles.notFound}>Brak wyników dla „{query}”</Text>
-        )}
+      {!loading && query.trim().length > 0 && (
+        <>
+          {movies.length === 0 && people.length === 0 ? (
+            <Text style={styles.notFound}>Brak wyników dla „{query}”</Text>
+          ) : (
+            <FlatList
+              data={[]}
+              ListHeaderComponent={
+                <>
+                  {movies.length > 0 && (
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Filmy</Text>
+                      <FlatList
+                        data={movies}
+                        keyExtractor={(i) => i.id.toString()}
+                        renderItem={renderMovie}
+                        scrollEnabled={false}
+                      />
+                    </View>
+                  )}
+                  {people.length > 0 && (
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Aktorzy</Text>
+                      <FlatList
+                        data={people}
+                        keyExtractor={(i) => i.id.toString()}
+                        renderItem={renderPerson}
+                        scrollEnabled={false}
+                      />
+                    </View>
+                  )}
+                </>
+              }
+              renderItem={null}
+            />
+          )}
+        </>
+      )}
 
-      {!loading && (
-        <FlatList
-          data={[]}
-          ListHeaderComponent={
-            <>
-              {movies.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Filmy</Text>
-                  <FlatList
-                    data={movies}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderMovie}
-                    scrollEnabled={false}
-                  />
-                </View>
-              )}
-              {people.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Aktorzy</Text>
-                  <FlatList
-                    data={people}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderPerson}
-                    scrollEnabled={false}
-                  />
-                </View>
-              )}
-            </>
-          }
-          renderItem={null}
-        />
+      {!loading && query.trim().length === 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Często oglądane:</Text>
+          <FlatList
+            horizontal
+            data={suggestions}
+            keyExtractor={(i) => i.id.toString()}
+            renderItem={renderSuggestion}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: 8 }}
+          />
+        </View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
   input: {
     height: 44,
     borderWidth: 1,
@@ -179,4 +234,23 @@ const styles = StyleSheet.create({
   },
   rowText: { fontSize: 16, flexShrink: 1 },
   notFound: { marginTop: 24, textAlign: "center", color: "#666" },
+
+  suggItem: {
+    marginRight: 12,
+    alignItems: "center",
+    width: posterWidth,
+  },
+  suggThumb: {
+    width: posterWidth,
+    height: posterWidth * 1.5,
+    borderRadius: 8,
+    backgroundColor: "#ddd",
+  },
+  suggText: {
+    marginTop: 6,
+    fontSize: 12,
+    width: posterWidth,
+    textAlign: "center",
+  },
+  noImagePlaceholder: { backgroundColor: "#ccc" },
 });

@@ -125,7 +125,11 @@ export default function MovieDetailsScreen() {
   );
 
   const renderMovie = ({ item }: { item: MovieSummary }) => (
-    <View style={styles.similar}>
+    <TouchableOpacity
+      style={styles.similar}
+      activeOpacity={0.8}
+      onPress={() => router.push(`/movie/${item.id}`)}
+    >
       {item.poster_path ? (
         <Image
           source={{ uri: `https://image.tmdb.org/t/p/w300${item.poster_path}` }}
@@ -139,7 +143,7 @@ export default function MovieDetailsScreen() {
       <Text style={styles.similarTitle} numberOfLines={1}>
         {item.title}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 
   const uniqueCast = movie.credits.cast.filter(

@@ -22,7 +22,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Główna",
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" color={color} size={size} />
           ),
@@ -31,7 +31,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="genres"
         options={{
-          title: "Categories",
+          title: "Kategorie",
           tabBarIcon: ({ color, size }) => (
             <Feather name="list" color={color} size={size} />
           ),
@@ -40,7 +40,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: "Search",
+          title: "Szukaj",
           tabBarIcon: ({ color, size }) => (
             <Feather name="search" color={color} size={size} />
           ),
@@ -49,7 +49,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="favorites"
         options={{
-          title: "Favorites",
+          title: "Ulubione",
           tabBarIcon: ({ color, size }) => (
             <Feather name="heart" color={color} size={size} />
           ),
