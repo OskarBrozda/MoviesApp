@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import tmdbApi from "../api/tmdbApi";
+import tmdbApi from "../../api/tmdbApi";
 
 interface Movie {
   id: number;
